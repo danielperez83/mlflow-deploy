@@ -21,7 +21,8 @@ mlflow-deploy/
 │       └── mlflow-ci.yml
 ├── Makefile
 └── mlruns/                 # se genera al entrenar; no se versiona
-
+```
+![Estructura](images/VSCode1.jpg)
 
 ## Dataset externo
 - **Wine Quality (Red)** — UCI (CSV con `;`).
@@ -37,6 +38,22 @@ mlflow-deploy/
   - `log_model` con **signature** e **input_example**
 - Guardamos `last_run_id.txt` para que `validate.py` cargue el run correcto.
 
+![MLflow](images/MLFlow1.jpg)
+![MLflow](images/MLFlow2.jpg)
+
+### Sobre `last_run_id.txt`
+Durante el entrenamiento guardamos el `run_id` más reciente en `last_run_id.txt`.  
+Luego, `validate.py` usa ese ID para cargar **el mismo** modelo con:
+
+```runs:/<run_id>/model```
+
+Esto garantiza que la validación se haga exactamente sobre el modelo recién registrado (no sobre uno antiguo).
+
+### "Signature” y “Input example”
+Al registrar el modelo con MLflow también guardamos:
+- **Signature**: el esquema de entrada/salida (columnas y tipos) del modelo. Evita errores de compatibilidad al predecir.
+- **Input example**: un ejemplo real de entrada (pequeño batch de datos) para probar e inspeccionar el modelo rápidamente.
+
 ## Validación (quality gate)
 - Carga el modelo desde `runs:/<run_id>/model`.
 - **Métrica:** `RMSE` en test.
@@ -45,6 +62,8 @@ mlflow-deploy/
 ## CI con GitHub Actions
 - **Workflow:** `.github/workflows/mlflow-ci.yml`
 - **Pasos:** `install → train → validate` y publica **`mlruns`** como artefacto auditable.
+
+![GitHub Actions](images/GitHubActions.jpg)
 
 ## Cómo correrlo (local)
 ```bash
