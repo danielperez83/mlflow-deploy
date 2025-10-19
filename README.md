@@ -1,40 +1,54 @@
 # Taller 4 — MLflow + GitHub Actions
 
-## Objetivo
-Crear un pipeline de **ejecución, entrenamiento, registro y validación** de un modelo con **GitHub Actions** y **MLflow**.
+## Presentado por
+Laura Carolina Mateus Agudelo · Daniel Antonio Pérez Beltrán · Andrés Felipe Sainea Rojas
 
-## Estructura del proyecto
+## Repositorio
+https://github.com/danielperez83/mlflow-deploy
+
+## ¿Qué hicimos?
+Construimos un pipeline que **entrena**, **registra** y **valida** un modelo de ML, tanto **localmente** como en **GitHub Actions**.  
+El resultado: con cada push/PR, el modelo se entrena, se guarda en **MLflow** (con **firma** e **input example**) y se **valida** con un **quality gate** automático.
+
+## Estructura
+```text
 mlflow-deploy/
 ├── train.py
 ├── validate.py
 ├── requirements.txt
-├── .github/workflows/mlflow-ci.yml
+├── .github/
+│   └── workflows/
+│       └── mlflow-ci.yml
 ├── Makefile
-└── mlruns/ # se genera al entrenar; no se versiona
+└── mlruns/                 # se genera al entrenar; no se versiona
 
 
 ## Dataset externo
-- **Wine Quality (Red)** — UCI Machine Learning Repository (CSV separado por `;`).
-- **Problema**: regresión (predecir `quality`).
-- **Motivo**: público, pequeño y 100% numérico → rápido y estable en CI.
+- **Wine Quality (Red)** — UCI (CSV con `;`).
+- **Problema:** regresión (predecir `quality`).
+- **Motivo:** público, pequeño y totalmente numérico (estable y rápido en CI).
 
 ## Entrenamiento y registro (MLflow)
-- Modelo: `StandardScaler` + `Ridge(alpha=1.0)`
-- División determinística: `test_size=0.2`, `random_state=42`
-- **MLflow Tracking** (`file://./mlruns`):
-  - `log_params`: modelo, alpha, split, etc.
-  - `log_metrics`: `mse`, `rmse`
-  - `log_model`: con **signature** e **input_example**
-- Se guarda `last_run_id.txt` para la validación.
+- **Pipeline:** `StandardScaler` + `Ridge(alpha=1.0)`
+- **Split reproducible:** `test_size=0.2`, `random_state=42`
+- **MLflow** (tracking local `file://./mlruns`):
+  - `log_params` (modelo, alpha, split, features)
+  - `log_metrics` (`mse`, `rmse`)
+  - `log_model` con **signature** e **input_example**
+- Guardamos `last_run_id.txt` para que `validate.py` cargue el run correcto.
 
 ## Validación (quality gate)
-- Carga el modelo desde **`runs:/<run_id>/model`**.
-- Métrica: **RMSE** en test.
-- **Umbral**: `RMSE ≤ 0.85` → aprobado (exit 0). Si no, falla (exit 1).
+- Carga el modelo desde `runs:/<run_id>/model`.
+- **Métrica:** `RMSE` en test.
+- **Umbral:** `RMSE ≤ 0.85` → aprueba (exit `0`); si no, falla (exit `1`).
 
-## Comandos (Makefile)
+## CI con GitHub Actions
+- **Workflow:** `.github/workflows/mlflow-ci.yml`
+- **Pasos:** `install → train → validate` y publica **`mlruns`** como artefacto auditable.
+
+## Cómo correrlo (local)
 ```bash
-# crear venv y activar (ejemplo Linux/WSL)
+# crear y activar venv (Linux/WSL)
 python3 -m venv .venv && source .venv/bin/activate
 
 # instalar dependencias
@@ -48,4 +62,3 @@ make validate
 
 # abrir UI de MLflow
 make mlflow-ui   # http://127.0.0.1:5001
-
