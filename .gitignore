@@ -1,0 +1,11 @@
+# Python / venv
+.venv/
+__pycache__/
+*.pyc
+
+# MLflow local y datos descargados
+mlruns/
+data/
+
+# VS Code
+.vscode/
